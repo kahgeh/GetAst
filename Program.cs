@@ -26,7 +26,7 @@ static (bool isCollection, string typeName) GetPropertyType(PropertyDeclarationS
 
 if (args.Length < 1)
 {
-    Console.WriteLine("except file path to a source file");
+    Console.WriteLine("expect file path to a source file");
     return;
 }
 var filePath = args[0];
@@ -58,5 +58,9 @@ foreach (var classNode in root.DescendantNodes()
     }
     types.Add(type);
 }
-Console.Write(JsonSerializer.Serialize(types));
+var serializeOptions = new JsonSerializerOptions
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+};
+Console.Write(JsonSerializer.Serialize(types, serializeOptions));
 
