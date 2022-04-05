@@ -17,10 +17,13 @@ namespace GetAst
     {
         public string Name { get; set; }
         public List<PropertyAst> Properties { get; set; }
+        public List<KeyValuePair<string, string>> StringFields { get; set; }
+
         public TypeAst(string name)
         {
             Name = name;
             Properties = new List<PropertyAst>();
+            StringFields = new List<KeyValuePair<string, string>>();
         }
     }
 

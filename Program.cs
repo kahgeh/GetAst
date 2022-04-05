@@ -47,6 +47,9 @@ SyntaxTree tree = CSharpSyntaxTree.ParseText(sourceCode);
 CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
 var types = new List<TypeAst>();
+var stringEnumsModifiers = new string[] { "static", "readonly", "const" };
+const string quotationMark = "\"";
+
 foreach (var classNode in root.DescendantNodes()
                          .OfType<ClassDeclarationSyntax>())
 {
@@ -55,6 +58,41 @@ foreach (var classNode in root.DescendantNodes()
     {
         var (isCollection, typeName) = GetPropertyType(property);
         type.Properties.Add(new PropertyAst(property.Identifier.ToString(), typeName, isCollection));
+    }
+
+    if (type.Properties.Count == 0)
+    {
+        var fields = classNode.DescendantNodes()
+          .OfType<FieldDeclarationSyntax>()
+          .Where(fds =>
+          {
+              var modifierTexts = fds.Modifiers.Select(m => m.Text);
+              return stringEnumsModifiers.Any(e => modifierTexts.Any(m => m == e));
+          });
+
+        if (fields == null)
+        {
+            continue;
+        }
+
+        foreach (var stringField in fields)
+        {
+            var variable = stringField.Declaration.Variables.First();
+            var initializer = variable.Initializer;
+            if (initializer == null)
+            {
+                continue;
+            }
+            var stringValue = initializer.DescendantNodes().OfType<LiteralExpressionSyntax>().SingleOrDefault();
+            if (stringValue == null)
+            {
+                continue;
+            }
+            type.StringFields.Add(new KeyValuePair<string, string>(
+                variable.Identifier.ValueText,
+                stringValue.GetText().ToString().Replace(quotationMark, "")));
+        }
+
     }
     types.Add(type);
 }
